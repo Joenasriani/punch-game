@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>STRESS BUSTER 3000</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
             overflow-x: hidden;
             margin: 0;
             padding: 0;
-            touch-action: manipulation;
+            touch-action: none; /* Prevents double-tap zoom and native scroll interference while punching */
         }
 
         .title-font {
@@ -32,7 +32,6 @@
             animation: highlight-intro 0.6s ease-out forwards;
         }
 
-        /* Target the container for shaking so the fixed cursor stays still */
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -55,10 +54,12 @@
         #game-wrapper {
             position: relative;
             max-width: 95vw;
-            margin: 20px auto;
+            margin: 10px auto;
             display: none;
+            /* On mobile, we hide the system cursor, but on desktop we hide it only over the wrapper */
             cursor: none;
         }
+
         canvas {
             border: 4px solid #e5e7eb;
             border-radius: 12px;
@@ -67,14 +68,16 @@
             height: auto;
             background-color: #f3f4f6;
             image-rendering: auto;
+            touch-action: none;
         }
+
         .fist-cursor {
             position: fixed;
             width: 120px;
             height: 120px;
             pointer-events: none;
             z-index: 1000;
-            font-size: 90px;
+            font-size: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -83,24 +86,41 @@
             transform-origin: center center;
             line-height: 1;
         }
-        /* Strictly scaling only to prevent drift */
+
+        /* Responsive Cursor Size */
+        @media (max-width: 768px) {
+            .fist-cursor {
+                width: 80px;
+                height: 80px;
+                font-size: 60px;
+            }
+        }
+
         .punching {
             transform: scale(1.25);
         }
+
         #library {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             overflow-x: auto;
             width: 100%;
             max-width: 1200px;
-            padding: 25px;
-            margin-bottom: 1.5rem;
-            justify-content: center;
+            padding: 15px;
+            margin-bottom: 1rem;
+            justify-content: flex-start;
+            scrollbar-width: none;
         }
+        #library::-webkit-scrollbar { display: none; }
+
+        @media (min-width: 768px) {
+            #library { justify-content: center; padding: 25px; }
+        }
+
         .thumb-btn {
             flex: 0 0 auto;
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             overflow: hidden;
             border: 3px solid #e5e7eb;
@@ -110,22 +130,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
             padding: 2px;
-            position: relative;
         }
+
+        @media (min-width: 768px) {
+            .thumb-btn { width: 80px; height: 80px; }
+        }
+
         .thumb-btn:hover {
             border-color: #6366f1;
-            transform: scale(1.15) !important;
+            transform: scale(1.1) !important;
             z-index: 20;
             box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
         }
-        .thumb-btn img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
+
         #loading-indicator {
             display: none;
             color: #6366f1;
@@ -136,11 +154,11 @@
 </head>
 <body>
 
-    <!-- Main Container for UI and Game (This will shake) -->
-    <div id="shake-container" class="flex flex-col items-center py-20 px-4 min-h-screen w-full">
-        <div class="text-center mb-10">
-            <div class="text-6xl font-black mb-5 text-indigo-600 uppercase title-font pl-[0.12em]">STRESS BUSTER 3000</div>
-            <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-[0.5em] pl-[0.5em]">release your temper!</p>
+    <div id="shake-container" class="flex flex-col items-center py-10 md:py-20 px-4 min-h-screen w-full">
+        <div class="text-center mb-6 md:mb-10">
+            <!-- Responsive title sizes -->
+            <div class="text-4xl md:text-6xl font-black mb-3 md:mb-5 text-indigo-600 uppercase title-font pl-[0.12em]">STRESS BUSTER 3000</div>
+            <p class="text-indigo-400 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.4em] md:tracking-[0.5em] pl-[0.5em]">release your temper!</p>
         </div>
 
         <div id="library">
@@ -149,25 +167,24 @@
 
         <div id="loading-indicator">PREPARING TARGET...</div>
 
-        <div id="setup-screen" class="w-full max-w-md mb-8 text-center">
-            <label class="flex flex-col items-center justify-center w-full h-16 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:bg-gray-100 transition">
-                <p class="text-sm text-gray-500 font-semibold">or Upload Custom Victim</p>
+        <div id="setup-screen" class="w-full max-w-md mb-6 md:mb-8 text-center">
+            <label class="flex flex-col items-center justify-center w-full h-14 md:h-16 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:bg-gray-100 transition">
+                <p class="text-xs md:text-sm text-gray-500 font-semibold">or Upload Custom Victim</p>
                 <input id="image-input" type="file" class="hidden" accept="image/*" />
             </label>
-            <p class="text-xs text-indigo-400 mt-2 font-medium italic">High-resolution images work best.</p>
+            <p class="text-[10px] md:text-xs text-indigo-400 mt-2 font-medium italic">High-resolution images work best.</p>
         </div>
 
         <div id="game-wrapper">
             <canvas id="game-canvas"></canvas>
         </div>
 
-        <div id="controls" class="hidden mt-12 mb-20 flex flex-wrap justify-center gap-6">
-            <button id="reset-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-10 py-3 rounded-full font-bold transition">Reset Face</button>
-            <button id="save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 rounded-full font-bold transition">Save Result</button>
+        <div id="controls" class="hidden mt-8 md:mt-12 mb-20 flex flex-wrap justify-center gap-4 md:gap-6">
+            <button id="reset-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base transition">Reset Face</button>
+            <button id="save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base transition">Save Result</button>
         </div>
     </div>
 
-    <!-- Punch Icon outside the shake container to remain perfectly still -->
     <div id="custom-cursor" class="fist-cursor hidden">👊</div>
 
     <script>
@@ -199,14 +216,17 @@
         ];
 
         let currentImgUrl = PEOPLE[0].url;
+        let originalImg = null;
         let particles = [];
         let animationFrame;
         let audioCtx;
+        let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
         function playPunchSFX() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
             const now = audioCtx.currentTime;
-
             const osc = audioCtx.createOscillator();
             const gThump = audioCtx.createGain();
             const lowFilter = audioCtx.createBiquadFilter();
@@ -226,9 +246,7 @@
 
             const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
             const output = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < noiseBuffer.length; i++) {
-                output[i] = Math.random() * 2 - 1;
-            }
+            for (let i = 0; i < noiseBuffer.length; i++) { output[i] = Math.random() * 2 - 1; }
             const noiseSource = audioCtx.createBufferSource();
             noiseSource.buffer = noiseBuffer;
             const gTesh = audioCtx.createGain();
@@ -248,7 +266,7 @@
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.size = Math.random() * 5 + 2;
+                this.size = Math.random() * (isTouchDevice ? 4 : 5) + 2;
                 this.speedX = (Math.random() - 0.5) * 14;
                 this.speedY = (Math.random() - 0.5) * 14 - 5;
                 this.gravity = 0.5;
@@ -273,7 +291,8 @@
         }
 
         function spawnBlood(x, y) {
-            for (let i = 0; i < 20; i++) {
+            const count = isTouchDevice ? 12 : 20;
+            for (let i = 0; i < count; i++) {
                 particles.push(new Particle(x, y));
             }
             if (!animationFrame) loop();
@@ -282,13 +301,8 @@
         function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(offCanvas, 0, 0);
-
             particles = particles.filter(p => p.life > 0);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-
+            particles.forEach(p => { p.update(); p.draw(); });
             if (particles.length > 0) {
                 animationFrame = requestAnimationFrame(loop);
             } else {
@@ -301,10 +315,8 @@
             libraryDiv.innerHTML = '';
             PEOPLE.forEach((person, index) => {
                 const btn = document.createElement('div');
-                btn.className = 'thumb-btn';
+                btn.className = 'thumb-btn intro-highlight';
                 btn.title = person.name;
-                
-                btn.classList.add('intro-highlight');
                 btn.style.animationDelay = `${index * 0.1}s`;
 
                 const img = document.createElement('img');
@@ -327,6 +339,30 @@
             });
         }
 
+        function resizeCanvas() {
+            if (!originalImg) return;
+            const maxW = window.innerWidth * 0.95;
+            const maxH = window.innerHeight * 0.65;
+            let scale = Math.min(maxW / originalImg.width, maxH / originalImg.height);
+            
+            // Store current state
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = offCanvas.width;
+            tempCanvas.height = offCanvas.height;
+            tempCanvas.getContext('2d').drawImage(offCanvas, 0, 0);
+
+            canvas.width = offCanvas.width = originalImg.width * scale;
+            canvas.height = offCanvas.height = originalImg.height * scale;
+            
+            offCtx.imageSmoothingEnabled = true;
+            offCtx.imageSmoothingQuality = 'high';
+            // Draw previous distortion scaled to new size
+            offCtx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, offCanvas.width, offCanvas.height);
+            ctx.drawImage(offCanvas, 0, 0);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
         function initGameWithImage(imgSrc) {
             loadingIndicator.style.display = 'block';
             gameWrapper.style.display = 'none';
@@ -334,24 +370,12 @@
 
             const img = new Image();
             img.onload = function() {
+                originalImg = img;
                 loadingIndicator.style.display = 'none';
-                const maxW = window.innerWidth * 0.95;
-                const maxH = window.innerHeight * 0.65;
-                let scale = Math.min(maxW / img.width, maxH / img.height);
-                
-                canvas.width = offCanvas.width = img.width * scale;
-                canvas.height = offCanvas.height = img.height * scale;
-                
-                offCtx.imageSmoothingEnabled = true;
-                offCtx.imageSmoothingQuality = 'high';
-                offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-                offCtx.drawImage(img, 0, 0, offCanvas.width, offCanvas.height);
-                
-                ctx.drawImage(offCanvas, 0, 0);
-                
+                resizeCanvas();
                 gameWrapper.style.display = 'block';
                 controls.classList.remove('hidden');
-                customCursor.classList.remove('hidden');
+                if (!isTouchDevice) customCursor.classList.remove('hidden');
             };
             img.onerror = () => {
                 loadingIndicator.style.display = 'none';
@@ -379,8 +403,10 @@
         });
 
         window.addEventListener('mousemove', (e) => {
-            customCursor.style.left = (e.clientX - 60) + 'px';
-            customCursor.style.top = (e.clientY - 60) + 'px';
+            if (isTouchDevice) return;
+            const offset = window.innerWidth < 768 ? 40 : 60;
+            customCursor.style.left = (e.clientX - offset) + 'px';
+            customCursor.style.top = (e.clientY - offset) + 'px';
         });
 
         saveBtn.onclick = () => {
@@ -391,7 +417,7 @@
         };
 
         function applySubtleSmudge(cx, cy) {
-            const radius = 95;
+            const radius = window.innerWidth < 768 ? 60 : 95;
             const strength = 0.22; 
             
             const startX = Math.max(0, Math.floor(cx - radius));
@@ -451,11 +477,19 @@
             
             if (canvasX < 0 || canvasX > canvas.width || canvasY < 0 || canvasY > canvas.height) return;
             
+            // On mobile, temporarily show fist at touch location
+            if (isTouchDevice) {
+                const offset = 40;
+                customCursor.style.left = (clientX - offset) + 'px';
+                customCursor.style.top = (clientY - offset) + 'px';
+                customCursor.classList.remove('hidden');
+                setTimeout(() => customCursor.classList.add('hidden'), 150);
+            }
+
             customCursor.classList.add('punching');
             setTimeout(() => customCursor.classList.remove('punching'), 100);
             
             playPunchSFX();
-            
             applySubtleSmudge(canvasX, canvasY);
             spawnBlood(canvasX, canvasY);
             
@@ -464,12 +498,11 @@
             shakeContainer.classList.add('shake-active');
         }
 
-        canvas.addEventListener('mousedown', (e) => handlePunch(e.clientX, e.clientY));
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            handlePunch(touch.clientX, touch.clientY);
-        }, { passive: false });
+        // Pointer Events for combined mouse and touch support
+        canvas.addEventListener('pointerdown', (e) => {
+            handlePunch(e.clientX, e.clientY);
+        });
+
     </script>
 </body>
 </html>
