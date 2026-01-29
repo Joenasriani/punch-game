@@ -12,6 +12,8 @@
             color: #1a1a1a;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
             touch-action: manipulation;
         }
 
@@ -20,6 +22,17 @@
             letter-spacing: 0.12em;
         }
 
+        @keyframes highlight-intro {
+            0% { transform: scale(1); border-color: #e5e7eb; }
+            50% { transform: scale(1.25); border-color: #6366f1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); z-index: 30; }
+            100% { transform: scale(1); border-color: #e5e7eb; }
+        }
+
+        .intro-highlight {
+            animation: highlight-intro 0.6s ease-out forwards;
+        }
+
+        /* Target the container for shaking so the fixed cursor stays still */
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -60,16 +73,19 @@
             width: 120px;
             height: 120px;
             pointer-events: none;
-            z-index: 100;
+            z-index: 1000;
             font-size: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: transform 0.05s ease-out;
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+            transform-origin: center center;
+            line-height: 1;
         }
+        /* Strictly scaling only to prevent drift */
         .punching {
-            transform: scale(0.7) translate(-20px, 20px) rotate(-20deg);
+            transform: scale(1.25);
         }
         #library {
             display: flex;
@@ -89,7 +105,7 @@
             overflow: hidden;
             border: 3px solid #e5e7eb;
             cursor: pointer;
-            transition: all 0.2s ease-in-out;
+            transition: border-color 0.2s, box-shadow 0.2s;
             background: #f9fafb;
             display: flex;
             align-items: center;
@@ -100,7 +116,7 @@
         }
         .thumb-btn:hover {
             border-color: #6366f1;
-            transform: scale(1.15);
+            transform: scale(1.15) !important;
             z-index: 20;
             box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
         }
@@ -118,39 +134,41 @@
         }
     </style>
 </head>
-<body class="flex flex-col items-center py-20 px-4 min-h-screen">
+<body>
 
-    <div class="text-center mb-10">
-        <div class="text-6xl font-black mb-5 text-indigo-600 uppercase title-font pl-[0.12em]">STRESS BUSTER 3000</div>
-        <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-[0.5em] pl-[0.5em]">release your temper!</p>
+    <!-- Main Container for UI and Game (This will shake) -->
+    <div id="shake-container" class="flex flex-col items-center py-20 px-4 min-h-screen w-full">
+        <div class="text-center mb-10">
+            <div class="text-6xl font-black mb-5 text-indigo-600 uppercase title-font pl-[0.12em]">STRESS BUSTER 3000</div>
+            <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-[0.5em] pl-[0.5em]">release your temper!</p>
+        </div>
+
+        <div id="library">
+            <!-- Populated by JS -->
+        </div>
+
+        <div id="loading-indicator">PREPARING TARGET...</div>
+
+        <div id="setup-screen" class="w-full max-w-md mb-8 text-center">
+            <label class="flex flex-col items-center justify-center w-full h-16 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:bg-gray-100 transition">
+                <p class="text-sm text-gray-500 font-semibold">or Upload Custom Victim</p>
+                <input id="image-input" type="file" class="hidden" accept="image/*" />
+            </label>
+            <p class="text-xs text-indigo-400 mt-2 font-medium italic">High-resolution images work best.</p>
+        </div>
+
+        <div id="game-wrapper">
+            <canvas id="game-canvas"></canvas>
+        </div>
+
+        <div id="controls" class="hidden mt-12 mb-20 flex flex-wrap justify-center gap-6">
+            <button id="reset-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-10 py-3 rounded-full font-bold transition">Reset Face</button>
+            <button id="save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 rounded-full font-bold transition">Save Result</button>
+        </div>
     </div>
 
-    <div id="library">
-        <!-- Populated by JS -->
-    </div>
-
-    <div id="loading-indicator">PREPARING TARGET...</div>
-
-    <div id="setup-screen" class="w-full max-w-md mb-8 text-center">
-        <label class="flex flex-col items-center justify-center w-full h-16 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:bg-gray-100 transition">
-            <p class="text-sm text-gray-500 font-semibold">or Upload Custom Victim</p>
-            <input id="image-input" type="file" class="hidden" accept="image/*" />
-        </label>
-        <p class="text-xs text-indigo-400 mt-2 font-medium italic">High-resolution images work best.</p>
-    </div>
-
-    <div id="game-wrapper">
-        <canvas id="game-canvas"></canvas>
-    </div>
-
-    <div id="controls" class="hidden mt-12 mb-20 flex flex-wrap justify-center gap-6">
-        <button id="reset-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-10 py-3 rounded-full font-bold transition">Reset Face</button>
-        <button id="save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 rounded-full font-bold transition">Save Result</button>
-    </div>
-
+    <!-- Punch Icon outside the shake container to remain perfectly still -->
     <div id="custom-cursor" class="fist-cursor hidden">👊</div>
-
-    <audio id="punch-sound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 
     <script>
         const imageInput = document.getElementById('image-input');
@@ -164,11 +182,11 @@
 
         const controls = document.getElementById('controls');
         const customCursor = document.getElementById('custom-cursor');
-        const punchSound = document.getElementById('punch-sound');
         const saveBtn = document.getElementById('save-btn');
         const resetBtn = document.getElementById('reset-btn');
         const libraryDiv = document.getElementById('library');
         const loadingIndicator = document.getElementById('loading-indicator');
+        const shakeContainer = document.getElementById('shake-container');
 
         const PEOPLE = [
             { name: "TRUMP", url: "/img/trump.jpg" },
@@ -183,6 +201,48 @@
         let currentImgUrl = PEOPLE[0].url;
         let particles = [];
         let animationFrame;
+        let audioCtx;
+
+        function playPunchSFX() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const now = audioCtx.currentTime;
+
+            const osc = audioCtx.createOscillator();
+            const gThump = audioCtx.createGain();
+            const lowFilter = audioCtx.createBiquadFilter();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+            lowFilter.type = 'lowpass';
+            lowFilter.frequency.setValueAtTime(400, now);
+            gThump.gain.setValueAtTime(0.6, now);
+            gThump.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.connect(lowFilter);
+            lowFilter.connect(gThump);
+            gThump.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(now + 0.15);
+
+            const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseBuffer.length; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            const noiseSource = audioCtx.createBufferSource();
+            noiseSource.buffer = noiseBuffer;
+            const gTesh = audioCtx.createGain();
+            const highFilter = audioCtx.createBiquadFilter();
+            highFilter.type = 'highpass';
+            highFilter.frequency.setValueAtTime(2500, now);
+            gTesh.gain.setValueAtTime(0.3, now);
+            gTesh.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+            noiseSource.connect(highFilter);
+            highFilter.connect(gTesh);
+            gTesh.connect(audioCtx.destination);
+            noiseSource.start();
+            noiseSource.stop(now + 0.1);
+        }
 
         class Particle {
             constructor(x, y) {
@@ -192,7 +252,6 @@
                 this.speedX = (Math.random() - 0.5) * 14;
                 this.speedY = (Math.random() - 0.5) * 14 - 5;
                 this.gravity = 0.5;
-                // Vibrant red colors
                 this.r = 190 + Math.random() * 65;
                 this.g = Math.random() * 10;
                 this.b = Math.random() * 10;
@@ -240,10 +299,13 @@
 
         function populateLibrary() {
             libraryDiv.innerHTML = '';
-            PEOPLE.forEach(person => {
+            PEOPLE.forEach((person, index) => {
                 const btn = document.createElement('div');
                 btn.className = 'thumb-btn';
                 btn.title = person.name;
+                
+                btn.classList.add('intro-highlight');
+                btn.style.animationDelay = `${index * 0.1}s`;
 
                 const img = document.createElement('img');
                 img.src = person.url;
@@ -392,15 +454,14 @@
             customCursor.classList.add('punching');
             setTimeout(() => customCursor.classList.remove('punching'), 100);
             
-            punchSound.currentTime = 0;
-            punchSound.play().catch(() => {});
+            playPunchSFX();
             
             applySubtleSmudge(canvasX, canvasY);
             spawnBlood(canvasX, canvasY);
             
-            document.body.classList.remove('shake-active');
-            void document.body.offsetWidth;
-            document.body.classList.add('shake-active');
+            shakeContainer.classList.remove('shake-active');
+            void shakeContainer.offsetWidth; 
+            shakeContainer.classList.add('shake-active');
         }
 
         canvas.addEventListener('mousedown', (e) => handlePunch(e.clientX, e.clientY));
