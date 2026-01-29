@@ -14,7 +14,7 @@
             overflow-x: hidden;
             margin: 0;
             padding: 0;
-            touch-action: none; /* Prevents double-tap zoom and native scroll interference while punching */
+            touch-action: none;
         }
 
         .title-font {
@@ -24,7 +24,7 @@
 
         @keyframes highlight-intro {
             0% { transform: scale(1); border-color: #e5e7eb; }
-            50% { transform: scale(1.25); border-color: #6366f1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); z-index: 30; }
+            50% { transform: scale(1.1); border-color: #6366f1; box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
             100% { transform: scale(1); border-color: #e5e7eb; }
         }
 
@@ -39,82 +39,65 @@
             30% { transform: translate(3px, 2px) rotate(0deg); }
             40% { transform: translate(1px, -1px) rotate(1deg); }
             50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
         }
         
         .shake-active {
-            animation: shake 0.15s;
-            animation-iteration-count: 1;
+            animation: shake 0.15s cubic-bezier(.36,.07,.19,.97) both;
         }
 
         #game-wrapper {
             position: relative;
-            max-width: 95vw;
+            width: 90vw;
+            max-width: 500px;
             margin: 10px auto;
+            aspect-ratio: 1/1;
             display: none;
-            /* On mobile, we hide the system cursor, but on desktop we hide it only over the wrapper */
             cursor: none;
         }
 
         canvas {
             border: 4px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            max-width: 100%;
-            height: auto;
-            background-color: #f3f4f6;
-            image-rendering: auto;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            width: 100%;
+            height: 100%;
+            background-color: #f9fafb;
             touch-action: none;
         }
 
         .fist-cursor {
             position: fixed;
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             pointer-events: none;
             z-index: 1000;
-            font-size: 80px;
+            font-size: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.05s ease-out;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
             transform-origin: center center;
             line-height: 1;
         }
 
-        /* Responsive Cursor Size */
-        @media (max-width: 768px) {
-            .fist-cursor {
-                width: 80px;
-                height: 80px;
-                font-size: 60px;
-            }
-        }
-
         .punching {
-            transform: scale(1.25);
+            transform: scale(1.3);
         }
 
         #library {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.5rem;
             overflow-x: auto;
             width: 100%;
-            max-width: 1200px;
-            padding: 15px;
-            margin-bottom: 1rem;
+            padding: 10px 20px;
+            margin-bottom: 5px;
             justify-content: flex-start;
-            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
-        #library::-webkit-scrollbar { display: none; }
 
         @media (min-width: 768px) {
-            #library { justify-content: center; padding: 25px; }
+            #library { justify-content: center; }
         }
 
         .thumb-btn {
@@ -125,63 +108,51 @@
             overflow: hidden;
             border: 3px solid #e5e7eb;
             cursor: pointer;
-            transition: border-color 0.2s, box-shadow 0.2s;
             background: #f9fafb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2px;
         }
 
-        @media (min-width: 768px) {
-            .thumb-btn { width: 80px; height: 80px; }
-        }
-
-        .thumb-btn:hover {
-            border-color: #6366f1;
-            transform: scale(1.1) !important;
-            z-index: 20;
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+        .thumb-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         #loading-indicator {
             display: none;
             color: #6366f1;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 1rem;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
 
-    <div id="shake-container" class="flex flex-col items-center py-10 md:py-20 px-4 min-h-screen w-full">
-        <div class="text-center mb-6 md:mb-10">
-            <!-- Responsive title sizes -->
-            <div class="text-4xl md:text-6xl font-black mb-3 md:mb-5 text-indigo-600 uppercase title-font pl-[0.12em]">STRESS BUSTER 3000</div>
-            <p class="text-indigo-400 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.4em] md:tracking-[0.5em] pl-[0.5em]">release your temper!</p>
+    <div id="shake-container" class="flex flex-col items-center py-6 md:py-12 px-4 min-h-screen w-full">
+        <div class="text-center mb-4">
+            <div class="text-4xl md:text-6xl font-black mb-2 text-indigo-600 uppercase title-font">STRESS BUSTER 3000</div>
+            <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-[0.4em]">release your temper!</p>
         </div>
 
-        <div id="library">
-            <!-- Populated by JS -->
-        </div>
+        <div id="library"></div>
 
-        <div id="loading-indicator">PREPARING TARGET...</div>
+        <div id="loading-indicator">LOADING TARGET...</div>
 
-        <div id="setup-screen" class="w-full max-w-md mb-6 md:mb-8 text-center">
-            <label class="flex flex-col items-center justify-center w-full h-14 md:h-16 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:bg-gray-100 transition">
-                <p class="text-xs md:text-sm text-gray-500 font-semibold">or Upload Custom Victim</p>
+        <div id="setup-screen" class="w-full max-w-xs mb-4 text-center">
+            <label class="flex flex-col items-center justify-center w-full h-14 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:bg-gray-50 transition">
+                <p class="text-[11px] text-gray-500 font-semibold uppercase">or Upload Custom Victim</p>
                 <input id="image-input" type="file" class="hidden" accept="image/*" />
             </label>
-            <p class="text-[10px] md:text-xs text-indigo-400 mt-2 font-medium italic">High-resolution images work best.</p>
+            <p class="text-[9px] text-indigo-300 mt-2 font-medium italic">High-resolution images work best.</p>
         </div>
 
         <div id="game-wrapper">
             <canvas id="game-canvas"></canvas>
         </div>
 
-        <div id="controls" class="hidden mt-8 md:mt-12 mb-20 flex flex-wrap justify-center gap-4 md:gap-6">
-            <button id="reset-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base transition">Reset Face</button>
-            <button id="save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 md:px-10 py-2 md:py-3 rounded-full font-bold text-sm md:text-base transition">Save Result</button>
+        <div id="controls" class="hidden mt-6 flex justify-center gap-3">
+            <button id="reset-btn" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-full font-bold text-xs uppercase tracking-wider">Reset</button>
+            <button id="save-btn" class="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-wider">Save</button>
         </div>
     </div>
 
@@ -189,11 +160,9 @@
 
     <script>
         const imageInput = document.getElementById('image-input');
-        const setupScreen = document.getElementById('setup-screen');
         const gameWrapper = document.getElementById('game-wrapper');
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        
         const offCanvas = document.createElement('canvas');
         const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
 
@@ -209,7 +178,7 @@
             { name: "TRUMP", url: "/img/trump.jpg" },
             { name: "BEZOS", url: "/img/bezos.jpg" },
             { name: "ELON", url: "/img/elon.jpeg" },
-            { name: "ZUCKERBERG", url: "/img/zuckerberg.jpg" },
+            { name: "ZUCK", url: "/img/zuckerberg.jpg" },
             { name: "GATES", url: "/img/gates.jpg" },
             { name: "COOK", url: "/img/cook.jpg" },
             { name: "ALTMAN", url: "/img/altman.jpg" }
@@ -220,82 +189,45 @@
         let particles = [];
         let animationFrame;
         let audioCtx;
-        let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const isTouch = 'ontouchstart' in window;
 
         function playPunchSFX() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gThump = audioCtx.createGain();
-            const lowFilter = audioCtx.createBiquadFilter();
-
             osc.type = 'sine';
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-            lowFilter.type = 'lowpass';
-            lowFilter.frequency.setValueAtTime(400, now);
-            gThump.gain.setValueAtTime(0.6, now);
+            gThump.gain.setValueAtTime(0.5, now);
             gThump.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-            osc.connect(lowFilter);
-            lowFilter.connect(gThump);
+            osc.connect(gThump);
             gThump.connect(audioCtx.destination);
             osc.start();
             osc.stop(now + 0.15);
-
-            const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
-            const output = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < noiseBuffer.length; i++) { output[i] = Math.random() * 2 - 1; }
-            const noiseSource = audioCtx.createBufferSource();
-            noiseSource.buffer = noiseBuffer;
-            const gTesh = audioCtx.createGain();
-            const highFilter = audioCtx.createBiquadFilter();
-            highFilter.type = 'highpass';
-            highFilter.frequency.setValueAtTime(2500, now);
-            gTesh.gain.setValueAtTime(0.3, now);
-            gTesh.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-            noiseSource.connect(highFilter);
-            highFilter.connect(gTesh);
-            gTesh.connect(audioCtx.destination);
-            noiseSource.start();
-            noiseSource.stop(now + 0.1);
         }
 
         class Particle {
             constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * (isTouchDevice ? 4 : 5) + 2;
-                this.speedX = (Math.random() - 0.5) * 14;
-                this.speedY = (Math.random() - 0.5) * 14 - 5;
-                this.gravity = 0.5;
-                this.r = 190 + Math.random() * 65;
-                this.g = Math.random() * 10;
-                this.b = Math.random() * 10;
+                this.x = x; this.y = y;
+                this.size = Math.random() * 3 + 2;
+                this.speedX = (Math.random() - 0.5) * 10;
+                this.speedY = (Math.random() - 0.5) * 10 - 2;
+                this.gravity = 0.4;
                 this.life = 1.0;
-                this.decay = Math.random() * 0.04 + 0.02;
+                this.decay = 0.04;
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.speedY += this.gravity;
-                this.life -= this.decay;
+                this.x += this.speedX; this.y += this.speedY;
+                this.speedY += this.gravity; this.life -= this.decay;
             }
             draw() {
-                ctx.fillStyle = `rgba(${this.r}, ${this.g}, ${this.b}, ${this.life})`;
+                ctx.fillStyle = `rgba(220, 20, 20, ${this.life})`;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
             }
-        }
-
-        function spawnBlood(x, y) {
-            const count = isTouchDevice ? 12 : 20;
-            for (let i = 0; i < count; i++) {
-                particles.push(new Particle(x, y));
-            }
-            if (!animationFrame) loop();
         }
 
         function loop() {
@@ -303,185 +235,57 @@
             ctx.drawImage(offCanvas, 0, 0);
             particles = particles.filter(p => p.life > 0);
             particles.forEach(p => { p.update(); p.draw(); });
-            if (particles.length > 0) {
-                animationFrame = requestAnimationFrame(loop);
-            } else {
-                animationFrame = null;
-                ctx.drawImage(offCanvas, 0, 0);
-            }
+            if (particles.length > 0) animationFrame = requestAnimationFrame(loop);
+            else animationFrame = null;
         }
 
         function populateLibrary() {
             libraryDiv.innerHTML = '';
-            PEOPLE.forEach((person, index) => {
+            PEOPLE.forEach((person, i) => {
                 const btn = document.createElement('div');
                 btn.className = 'thumb-btn intro-highlight';
-                btn.title = person.name;
-                btn.style.animationDelay = `${index * 0.1}s`;
-
-                const img = document.createElement('img');
-                img.src = person.url;
-                img.alt = person.name;
-                img.onerror = () => {
-                    img.style.display = 'none';
-                    const span = document.createElement('span');
-                    span.className = 'text-[10px] font-bold text-gray-400 uppercase tracking-tighter';
-                    span.innerText = person.name;
-                    btn.appendChild(span);
-                };
-
-                btn.appendChild(img);
-                btn.onclick = () => {
-                    currentImgUrl = person.url;
-                    initGameWithImage(person.url);
-                };
+                btn.style.animationDelay = `${i * 0.1}s`;
+                btn.innerHTML = `<img src="${person.url}" alt="${person.name}">`;
+                btn.onclick = () => initGameWithImage(person.url);
                 libraryDiv.appendChild(btn);
             });
         }
-
-        function resizeCanvas() {
-            if (!originalImg) return;
-            const maxW = window.innerWidth * 0.95;
-            const maxH = window.innerHeight * 0.65;
-            let scale = Math.min(maxW / originalImg.width, maxH / originalImg.height);
-            
-            // Store current state
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = offCanvas.width;
-            tempCanvas.height = offCanvas.height;
-            tempCanvas.getContext('2d').drawImage(offCanvas, 0, 0);
-
-            canvas.width = offCanvas.width = originalImg.width * scale;
-            canvas.height = offCanvas.height = originalImg.height * scale;
-            
-            offCtx.imageSmoothingEnabled = true;
-            offCtx.imageSmoothingQuality = 'high';
-            // Draw previous distortion scaled to new size
-            offCtx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, offCanvas.width, offCanvas.height);
-            ctx.drawImage(offCanvas, 0, 0);
-        }
-
-        window.addEventListener('resize', resizeCanvas);
 
         function initGameWithImage(imgSrc) {
             loadingIndicator.style.display = 'block';
             gameWrapper.style.display = 'none';
             controls.classList.add('hidden');
+            currentImgUrl = imgSrc;
 
             const img = new Image();
             img.onload = function() {
                 originalImg = img;
                 loadingIndicator.style.display = 'none';
-                resizeCanvas();
+                const size = Math.min(window.innerWidth * 0.9, 500);
+                canvas.width = offCanvas.width = size;
+                canvas.height = offCanvas.height = size;
+                const scale = Math.max(size / img.width, size / img.height);
+                const x = (size - img.width * scale) / 2;
+                const y = (size - img.height * scale) / 2;
+                offCtx.clearRect(0, 0, size, size);
+                offCtx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                ctx.drawImage(offCanvas, 0, 0);
                 gameWrapper.style.display = 'block';
                 controls.classList.remove('hidden');
-                if (!isTouchDevice) customCursor.classList.remove('hidden');
-            };
-            img.onerror = () => {
-                loadingIndicator.style.display = 'none';
-                console.warn("Local image not found at: " + imgSrc);
+                if (!isTouch) customCursor.classList.remove('hidden');
             };
             img.src = imgSrc;
-        }
-
-        window.onload = () => {
-            populateLibrary();
-            initGameWithImage(currentImgUrl);
-        };
-
-        resetBtn.onclick = () => initGameWithImage(currentImgUrl);
-
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                currentImgUrl = event.target.result;
-                initGameWithImage(currentImgUrl);
-            };
-            reader.readAsDataURL(file);
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isTouchDevice) return;
-            const offset = window.innerWidth < 768 ? 40 : 60;
-            customCursor.style.left = (e.clientX - offset) + 'px';
-            customCursor.style.top = (e.clientY - offset) + 'px';
-        });
-
-        saveBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.download = 'punched-result.png';
-            link.href = offCanvas.toDataURL('image/png');
-            link.click();
-        };
-
-        function applySubtleSmudge(cx, cy) {
-            const radius = window.innerWidth < 768 ? 60 : 95;
-            const strength = 0.22; 
-            
-            const startX = Math.max(0, Math.floor(cx - radius));
-            const startY = Math.max(0, Math.floor(cy - radius));
-            const endX = Math.min(offCanvas.width, Math.ceil(cx + radius));
-            const endY = Math.min(offCanvas.height, Math.ceil(cy + radius));
-            const width = endX - startX;
-            const height = endY - startY;
-
-            if (width <= 0 || height <= 0) return;
-
-            const imageData = offCtx.getImageData(startX, startY, width, height);
-            const data = imageData.data;
-            const copy = new Uint8ClampedArray(data);
-            
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const dx = (startX + x) - cx;
-                    const dy = (startY + y) - cy;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < radius) {
-                        const normDist = distance / radius;
-                        const factor = (1 - normDist) * strength;
-                        const srcX = (startX + x) - (dx * factor);
-                        const srcY = (startY + y) - (dy * factor);
-                        
-                        const sx = Math.floor(Math.max(0, Math.min(width + startX - 1, srcX))) - startX;
-                        const sy = Math.floor(Math.max(0, Math.min(height + startY - 1, srcY))) - startY;
-                        
-                        const si = (sy * width + sx) * 4;
-                        const di = (y * width + x) * 4;
-                        
-                        data[di] = copy[si];
-                        data[di+1] = copy[si+1];
-                        data[di+2] = copy[si+2];
-                        data[di+3] = copy[si+3];
-                    }
-                }
-            }
-            offCtx.putImageData(imageData, startX, startY);
-
-            const grad = offCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-            grad.addColorStop(0, 'rgba(0, 0, 0, 0.04)');
-            grad.addColorStop(0.7, 'rgba(0, 0, 0, 0.01)');
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            offCtx.fillStyle = grad;
-            offCtx.beginPath();
-            offCtx.arc(cx, cy, radius, 0, Math.PI * 2);
-            offCtx.fill();
         }
 
         function handlePunch(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
             const canvasX = (clientX - rect.left) * (canvas.width / rect.width);
             const canvasY = (clientY - rect.top) * (canvas.height / rect.height);
-            
             if (canvasX < 0 || canvasX > canvas.width || canvasY < 0 || canvasY > canvas.height) return;
-            
-            // On mobile, temporarily show fist at touch location
-            if (isTouchDevice) {
-                const offset = 40;
-                customCursor.style.left = (clientX - offset) + 'px';
-                customCursor.style.top = (clientY - offset) + 'px';
+
+            if (isTouch) {
+                customCursor.style.left = (clientX - 50) + 'px';
+                customCursor.style.top = (clientY - 50) + 'px';
                 customCursor.classList.remove('hidden');
                 setTimeout(() => customCursor.classList.add('hidden'), 150);
             }
@@ -490,19 +294,62 @@
             setTimeout(() => customCursor.classList.remove('punching'), 100);
             
             playPunchSFX();
-            applySubtleSmudge(canvasX, canvasY);
-            spawnBlood(canvasX, canvasY);
+            applySmudge(canvasX, canvasY);
+            for(let i=0; i<15; i++) particles.push(new Particle(canvasX, canvasY));
+            if (!animationFrame) loop();
             
             shakeContainer.classList.remove('shake-active');
             void shakeContainer.offsetWidth; 
             shakeContainer.classList.add('shake-active');
         }
 
-        // Pointer Events for combined mouse and touch support
-        canvas.addEventListener('pointerdown', (e) => {
-            handlePunch(e.clientX, e.clientY);
-        });
+        function applySmudge(cx, cy) {
+            const radius = isTouch ? 50 : 70;
+            const strength = 0.2;
+            const startX = Math.max(0, cx - radius), startY = Math.max(0, cy - radius);
+            const width = Math.min(canvas.width - startX, radius * 2), height = Math.min(canvas.height - startY, radius * 2);
+            const imageData = offCtx.getImageData(startX, startY, width, height);
+            const data = imageData.data;
+            const copy = new Uint8ClampedArray(data);
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const dx = (startX + x) - cx, dy = (startY + y) - cy;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < radius) {
+                        const factor = (1 - dist / radius) * strength;
+                        const sx = Math.floor(x - dx * factor), sy = Math.floor(y - dy * factor);
+                        if (sx >= 0 && sx < width && sy >= 0 && sy < height) {
+                            const si = (sy * width + sx) * 4, di = (y * width + x) * 4;
+                            data[di] = copy[si]; data[di+1] = copy[si+1]; data[di+2] = copy[si+2];
+                        }
+                    }
+                }
+            }
+            offCtx.putImageData(imageData, startX, startY);
+            offCtx.fillStyle = 'rgba(0,0,0,0.03)';
+            offCtx.beginPath(); offCtx.arc(cx, cy, radius, 0, Math.PI * 2); offCtx.fill();
+        }
 
+        window.onload = () => { populateLibrary(); initGameWithImage(currentImgUrl); };
+        resetBtn.onclick = () => initGameWithImage(currentImgUrl);
+        imageInput.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => initGameWithImage(ev.target.result);
+            reader.readAsDataURL(e.target.files[0]);
+        };
+        window.onmousemove = (e) => {
+            if (isTouch) return;
+            customCursor.style.left = (e.clientX - 50) + 'px';
+            customCursor.style.top = (e.clientY - 50) + 'px';
+        };
+        canvas.onpointerdown = (e) => handlePunch(e.clientX, e.clientY);
+        saveBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.download = 'punched.png';
+            link.href = offCanvas.toDataURL();
+            link.click();
+        };
     </script>
 </body>
 </html>
+
