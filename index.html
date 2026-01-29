@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Smudger - Stress Buster</title>
+    <title>STRESS BUSTER 3000</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -50,7 +50,7 @@
             overflow-x: auto;
             width: 100%;
             max-width: 1200px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 1.5rem;
             justify-content: center;
         }
@@ -74,8 +74,8 @@
         .thumb-btn:hover {
             border-color: #6366f1;
             transform: scale(1.15);
-            z-index: 10;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            z-index: 20;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
         }
         .thumb-btn img {
             width: 100%;
@@ -94,7 +94,7 @@
 <body class="flex flex-col items-center py-20 px-4 min-h-screen">
 
     <div class="text-center mb-10">
-        <div class="text-4xl font-extrabold mb-3 text-indigo-600">SMUDGE PUNCHER 3000</div>
+        <div class="text-4xl font-extrabold mb-3 text-indigo-600 uppercase">STRESS BUSTER 3000</div>
         <p class="text-indigo-400 text-xl font-medium">release your temper!</p>
     </div>
 
@@ -104,7 +104,7 @@
 
     <div id="loading-indicator">PREPARING TARGET...</div>
 
-    <div id="setup-screen" class="w-full max-md mb-8">
+    <div id="setup-screen" class="w-full max-w-md mb-8">
         <label class="flex flex-col items-center justify-center w-full h-16 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:bg-gray-100 transition">
             <p class="text-sm text-gray-500 font-semibold">or Upload Custom Victim</p>
             <input id="image-input" type="file" class="hidden" accept="image/*" />
@@ -237,9 +237,9 @@
             link.click();
         };
 
-        function applyHighResSmudge(cx, cy) {
-            const radius = 100;
-            const strength = 0.45;
+        function applySubtleSmudge(cx, cy) {
+            const radius = 90;
+            const strength = 0.18; // Slightly increased for punchier feel without black effect
             
             const startX = Math.max(0, Math.floor(cx - radius));
             const startY = Math.max(0, Math.floor(cy - radius));
@@ -262,14 +262,12 @@
                     
                     if (distance < radius) {
                         const normDist = distance / radius;
-                        const displacement = strength * Math.sin(Math.PI * normDist);
-                        const amount = normDist + displacement;
+                        const factor = (1 - normDist) * strength;
+                        const srcX = (startX + x) - (dx * factor);
+                        const srcY = (startY + y) - (dy * factor);
                         
-                        const srcX = (dx * (amount / normDist)) + radius - (startX - (cx - radius));
-                        const srcY = (dy * (amount / normDist)) + radius - (startY - (cy - radius));
-                        
-                        const sx = Math.floor(Math.max(0, Math.min(width - 1, srcX)));
-                        const sy = Math.floor(Math.max(0, Math.min(height - 1, srcY)));
+                        const sx = Math.floor(Math.max(0, Math.min(width + startX - 1, srcX))) - startX;
+                        const sy = Math.floor(Math.max(0, Math.min(height + startY - 1, srcY))) - startY;
                         
                         const si = (sy * width + sx) * 4;
                         const di = (y * width + x) * 4;
@@ -282,16 +280,6 @@
                 }
             }
             ctx.putImageData(imageData, startX, startY);
-
-            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-            grad.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
-            grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.04)');
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.fill();
         }
 
         function handlePunch(clientX, clientY) {
@@ -307,9 +295,9 @@
             punchSound.currentTime = 0;
             punchSound.play().catch(() => {});
             
-            applyHighResSmudge(canvasX, canvasY);
+            applySubtleSmudge(canvasX, canvasY);
             
-            document.body.style.transform = `translate(${Math.random() * 8 - 4}px, ${Math.random() * 8 - 4}px)`;
+            document.body.style.transform = `translate(${Math.random() * 6 - 3}px, ${Math.random() * 6 - 3}px)`;
             setTimeout(() => document.body.style.transform = 'none', 50);
         }
 
